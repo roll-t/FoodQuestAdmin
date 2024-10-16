@@ -128,36 +128,3 @@ export class UserModel {
     };
   }
 }
-
-export class RestaurantModel {
-  constructor(id, userId, nameRestaurant, emailRestaurant, phoneRestaurant, addressRestaurant, licenseRestaurant,onwnerLicenseImages, avatarUrl, backgroundUrl, status) {
-    this.idRestaurant = id;
-    this.userId = userId;
-    this.nameRestaurant = nameRestaurant;
-    this.emailRestaurant = emailRestaurant;
-    this.phoneRestaurant = phoneRestaurant;
-    this.addressRestaurant = addressRestaurant;
-    this.licenseRestaurant = licenseRestaurant;
-    this.onwnerLicenseImages = onwnerLicenseImages;
-    this.avatarUrl = avatarUrl;
-    this.backgroundUrl = backgroundUrl;
-    this.status = status;
-  }
-
-  static fromDocumentSnapshot(doc) {
-    const data = doc.data();
-    return new RestaurantModel(
-      doc.id,
-      data.userId,
-      data.nameRestaurant,
-      data.emailRestaurant,
-      data.phoneRestaurant,
-      data.addressRestaurant,
-      data.licenseRestaurant,
-      data.onwnerLicenseImages,
-      data.avatarUrl,
-      data.backgroundUrl,
-      data.status
-    );
-  }
-}

@@ -2,6 +2,7 @@
 .container{
     position: sticky;
     top:40px;
+    color: var(--text);
 }
 
 .user {
@@ -11,6 +12,8 @@
     margin-bottom: 20px;
 }
 .userImg{
+    width: 50px;
+    height: 50px;
     object-fit: cover;
 }
 .userDetail{
@@ -28,6 +31,7 @@
 
 .list{
     list-style: none;
+    color: var(--text);
 }
 .cat{
     color: var(--text-soft);
@@ -46,7 +50,9 @@
     border:none;
     color:var(--text);
     cursor: pointer;
+    text-decoration: none;
 }
+
 .logout:hover{
     background-color: var(--bg-hover);
 }

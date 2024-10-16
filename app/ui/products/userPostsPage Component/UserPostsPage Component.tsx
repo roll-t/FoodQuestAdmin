@@ -1,11 +1,11 @@
 'use client'
-import React, { useEffect, useState } from 'react';
-import styles from '@/app/ui/users/userPosts.module.css'; // Adjust the path as necessary
-import { format } from 'date-fns';
 import { fetchPostsByUser } from '@/app/lib/data'; // Import the function to fetch posts by user
 import { PostDataModel } from '@/app/lib/models';
-import Pagination from '@/app/ui/paginationComponent/PaginationComponent'; // Adjust import path
+import Pagination from '@/app/ui/shared/paginationComponent/PaginationComponent'; // Adjust import path
+import styles from '@/app/ui/users/userPosts.module.css'; // Adjust the path as necessary
+import { format } from 'date-fns';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 const POSTS_PER_PAGE = 10;
 

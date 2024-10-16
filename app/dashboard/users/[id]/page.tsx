@@ -1,12 +1,12 @@
 
-import React from 'react';
-import styles from '@/app/ui/users/singleUser/singleUser.module.css'
 import { fetchSingleUser } from '@/app/lib/data';
+import styles from '@/app/ui/users/singleUser/singleUser.module.css';
 import ProductPage from '../../posts/page';
 
 const SingleUserPage = async ({ params }: any) => {
     const { id } = params
     const user = await fetchSingleUser(id);
+    
     return (
         <>
             <div className={styles.container}>

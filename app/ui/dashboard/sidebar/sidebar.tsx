@@ -1,20 +1,16 @@
+"use client"
+import styles from './sidebar.module.css';
 
-import React from 'react';
-import styles from './sidebar.module.css'
-
+import Authentication from '@/app/lib/data/authentication';
+import { useRouter } from 'next/navigation';
 import {
-    MdDashboard,
     MdAccountCircle,
-    MdOutlineAddShoppingCart,
-    MdAttachMoney,
-    MdLogout,
-    MdOutlinePodcasts,
-    MdPostAdd,
-    MdCompost,
-    MdRestaurant
-} from "react-icons/md"
+    MdBook,
+    MdCategory,
+    MdDashboard,
+    MdLogout
+} from "react-icons/md";
 import MenuLink from './menuLink/menuLink';
-import Link from 'next/link';
 
 const menuItems = [
     {
@@ -31,56 +27,29 @@ const menuItems = [
                 icon: <MdAccountCircle />,
             },
             {
-                title: "Posts",
-                path: "/dashboard/posts",
-                icon: <MdPostAdd/>,
+                title: "Danh mục",
+                path: "/dashboard/category",
+                icon: <MdCategory />,
             },
             {
-                title: "Restaurant",
-                path: "/dashboard/restaurant",
-                icon: <MdRestaurant />,
+                title: "Sách",
+                path: "/dashboard/book",
+                icon: <MdBook />,
             }
         ]
     },
-    // {
-    //     title: "Analytics",
-    //     list: [
-    //         {
-    //             title: "Dashboard",
-    //             path: "/analtics",
-    //             icon: <MdDashboard />,
-    //         },
-    //         {
-    //             title: "User",
-    //             path: "/Analytics/users",
-    //             icon: <MdAccountCircle />,
-    //         },
-    //         {
-    //             title: "Products",
-    //             path: "/Analytics/products",
-    //             icon: <MdOutlineAddShoppingCart />,
-    //         }
-    //     ]
-    // },
-    // {
-    //     title: "User",
-    //     list: [
-    //         {
-    //             title: "Dashboard",
-    //             path: "/user",
-    //             icon: <MdDashboard />,
-    //         },
-    //         {
-    //             title: "User",
-    //             path: "/User/users",
-    //             icon: <MdAccountCircle />,
-    //         }
-    //     ]
-    // }
-
 ]
 
+
+
 const Sidebar = () => {
+    const router = useRouter();
+    const logout = () => {
+        if (Authentication.logout()) {
+            router.push("/")
+        }
+    }
+
     return (
         <div className={styles.container}>
             <div className={styles.user}>
@@ -102,12 +71,11 @@ const Sidebar = () => {
                     ))
                 }
             </ul>
-            <Link href={'/login'}>
-                <button className={styles.logout}>
-                    <MdLogout />
-                    Logout
-                </button>
-            </Link>
+
+            <button onClick={logout} className={styles.logout}>
+                <MdLogout />
+                Logout
+            </button>
         </div>
     );
 };

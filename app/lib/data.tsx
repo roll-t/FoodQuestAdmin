@@ -1,139 +1,14 @@
-import { collection, deleteDoc, doc, DocumentData, getDoc, getDocs, limit, orderBy, query, QuerySnapshot, startAfter, updateDoc, where } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
-import { getFirestore} from 'firebase/firestore';
-import firebaseConfig from './utils'; // Ensure this is correctly configured
-import {PostDataModel, RestaurantModel, UserModel} from './models'; // Ensure this is correctly imported
+import { collection, doc, getDoc, getDocs, getFirestore, query, where } from 'firebase/firestore';
 import { User } from './interface/user';
-import { deleteObject, ref } from 'firebase/storage';
+import { UserModel } from './models'; // Ensure this is correctly imported
+import firebaseConfig from './utils'; // Ensure this is correctly configured
 
 // Initialize Firebase app
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore
 const firestore = getFirestore(app);
-
-enum StatusPosts {
-  active = 'active',
-  waiting = 'waiting',
-  error = 'error',
-  private = 'private'
-}
-
-export async function fetchPosts(
-  page: number,
-  postsPerPage: number,
-  searchQuery?: string,
-  status?: StatusPosts, // Add status parameter
-  userId?: string // Add userId parameter
-): Promise<{ posts: PostDataModel[], total: number }> {
-  const postsCollection = collection(firestore, 'posts');
-
-  // Create the base query with ordering and limit
-  let postsQuery = query(
-    postsCollection,
-    limit(postsPerPage)
-  );
-
-  // Apply userId filter if provided
-  if (userId) {
-    postsQuery = query(
-      postsQuery,
-      where('userId', '==', userId)
-    );
-  }
-
-  // Apply search filter if provided
-  if (searchQuery) {
-    postsQuery = query(
-      postsQuery,
-      where('title', '>=', searchQuery),
-      where('title', '<=', searchQuery + '\uf8ff')
-    );
-  }
-
-  // Apply status filter if provided
-  if (status) {
-    postsQuery = query(
-      postsQuery,
-      where('status', '==', status)
-    );
-  }
-
-  // Handle pagination
-  if (page > 1) {
-    const prevPageDocs = await getDocs(query(
-      postsCollection,
-      limit((page - 1) * postsPerPage)
-    ));
-    const lastDoc = prevPageDocs.docs[prevPageDocs.docs.length - 1];
-    if (lastDoc) {
-      postsQuery = query(
-        postsQuery,
-        startAfter(lastDoc),
-        limit(postsPerPage)
-      );
-    }
-  }
-
-  try {
-    const snapshot: QuerySnapshot<DocumentData> = await getDocs(postsQuery);
-    const posts = snapshot.docs.map((doc) => PostDataModel.fromDocumentSnapshot(doc));
-
-    // Get the total count of posts
-    let total = 0;
-    let totalQuery = query(postsCollection);
-
-    // Apply userId filter to total count query if provided
-    if (userId) {
-      totalQuery = query(
-        totalQuery,
-        where('userId', '==', userId)
-      );
-    }
-
-    // Apply search and status filters to total count query if provided
-    if (searchQuery) {
-      totalQuery = query(
-        totalQuery,
-        where('title', '>=', searchQuery),
-        where('title', '<=', searchQuery + '\uf8ff')
-      );
-    }
-
-    if (status) {
-      totalQuery = query(
-        totalQuery,
-        where('status', '==', status)
-      );
-    }
-
-    const totalSnapshot = await getDocs(totalQuery);
-    total = totalSnapshot.size;
-
-    return { posts, total };
-  } catch (error) {
-    console.error('Error fetching posts:', error);
-    throw new Error('Failed to fetch posts');
-  }
-}
-
-// Function to fetch a post by ID from Firestore
-export async function fetchPostById(postId: string): Promise<PostDataModel | null> {
-  const postDocRef = doc(firestore, 'posts', postId); // Reference to the specific document in the 'posts' collection
-
-  try {
-    const postDoc = await getDoc(postDocRef);
-    if (postDoc.exists()) {
-      return PostDataModel.fromDocumentSnapshot(postDoc); // Convert the document to PostDataModel
-    } else {
-      console.log('No such document!');
-      return null; // Return null if the document does not exist
-    }
-  } catch (error) {
-    console.error('Error fetching post by ID:', error);
-    throw new Error('Failed to fetch post by ID');
-  }
-}
 
 
 export async function fetchAllUsers() {
@@ -162,57 +37,6 @@ export async function fetchSingleUser(id: string): Promise<UserModel | null> {
     throw new Error('Failed to fetch user');
   }
 }
-
-
-export async function fetchPostsByUser(userId: string, page: number = 1, postsPerPage: number = 10): Promise<{ posts: PostDataModel[], total: number }> {
-  const postsCollection = collection(firestore, 'posts');
-
-  // Create the base query with userId, ordering, and limit
-  let postsQuery = query(
-      postsCollection,
-      where('userId', '==', userId),
-      limit(postsPerPage)
-  );
-
-  // Handle pagination
-  if (page > 1) {
-      const prevPageDocs = await getDocs(query(
-          postsCollection,
-          where('userId', '==', userId),
-          limit((page - 1) * postsPerPage)
-      ));
-      const lastDoc = prevPageDocs.docs[prevPageDocs.docs.length - 1];
-      if (lastDoc) {
-          postsQuery = query(
-              postsQuery,
-              startAfter(lastDoc),
-              limit(postsPerPage)
-          );
-      }
-  }
-
-  try {
-      const snapshot: QuerySnapshot<DocumentData> = await getDocs(postsQuery);
-      const posts = snapshot.docs.map(doc => PostDataModel.fromDocumentSnapshot(doc));
-
-      // Get the total count of posts by user
-      let total = 0;
-      const totalQuery = query(
-          postsCollection,
-          where('userId', '==', userId)
-      );
-
-      const totalSnapshot = await getDocs(totalQuery);
-      total = totalSnapshot.size;
-
-      return { posts, total };
-  } catch (error) {
-      console.error('Error fetching posts by user:', error);
-      throw new Error('Failed to fetch posts by user');
-  }
-}
-
-
 
 export async function fetchTopUsersByPostCount(): Promise<User[]> {
   try {
@@ -291,36 +115,6 @@ export async function fetchTopUsersByPostCount(): Promise<User[]> {
   } catch (error) {
     console.error('Error fetching top users by post count:', error);
     return [];
-  }
-}
-
-export async function fetchRestaurant() {
-  const RestaurantsCollection = collection(firestore, 'restaurant'); // Reference to the 'restaurant' collection
-  try {
-    const snapshot = await getDocs(RestaurantsCollection);
-    const restaurants = snapshot.docs.map((doc) => RestaurantModel.fromDocumentSnapshot(doc)); // Convert each document to RestaurantModel
-    return restaurants;
-  } catch (error) {
-    console.error('Error fetching restaurants:', error);
-    throw new Error('Failed to fetch restaurants');
-  }
-}
-
-// Function to fetch a restaurant by its ID from Firestore
-export async function fetchRestaurantById(restaurantId: string): Promise<RestaurantModel | null> {
-  const restaurantDocRef = doc(firestore, 'restaurant', restaurantId); // Reference to the specific document in the 'restaurant' collection
-
-  try {
-    const restaurantDoc = await getDoc(restaurantDocRef);
-    if (restaurantDoc.exists()) {
-      return RestaurantModel.fromDocumentSnapshot(restaurantDoc); // Convert the document to RestaurantModel
-    } else {
-      console.log('No such document!');
-      return null; // Return null if the document does not exist
-    }
-  } catch (error) {
-    console.error('Error fetching restaurant by ID:', error);
-    throw new Error('Failed to fetch restaurant by ID');
   }
 }
 

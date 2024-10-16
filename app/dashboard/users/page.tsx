@@ -1,45 +1,57 @@
-"use client";
-import React, { useEffect, useState } from 'react';
-import styles from '@/app/ui/users/users.module.css';
+"use client"
+import { UserCreationRequest } from '@/app/lib/data/dto/request_types';
+import { UserResponse } from '@/app/lib/data/dto/response_types';
+import UserData from '@/app/lib/data/user_data';
+import DateUtils from '@/app/lib/utils/date_utils';
 import Search from '@/app/ui/dashboard/search/search';
-import Pagination from '@/app/ui/pagination/pagination';
+import styles from '@/app/ui/users/users.module.css';
 import Link from 'next/link';
-import { fetchAllUsers } from '@/app/lib/data'; // Import your function to fetch users
-import {UserModel} from '@/app/lib/models'; // Import your UserModel
+import { useEffect, useState } from 'react';
 
-const UserPage = ({ searchParams }: any) => {
-    const [users, setUsers] = useState<UserModel[]>([]);
+const UserPage = () => {
+    const [users, setUsers] = useState<UserResponse[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>('');
 
-    useEffect(() => {
-        const getUsers = async () => {
+    // Fetch all users
+    const fetchUsers = async () => {
+        try {
             setLoading(true);
-            try {
-                const usersList = await fetchAllUsers();
-                setUsers(usersList);
-            } catch (err) {
-                setError('Failed to fetch users');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        getUsers();
-    }, [searchQuery]);
+            const usersList = await UserData.getUsers();
+            setUsers(usersList);
+        } catch (err) {
+            setError('Failed to fetch users');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
     };
 
-    if (loading) {
-        return <p>Loading...</p>;
-    }
+    // Create a new user (example function)
+    const createUser = async (newUser: UserCreationRequest) => {
+        try {
+            const createdUser = await UserData.createUser(newUser);
+            setUsers(prev => [...prev, createdUser]); // Add the new user to the state
+        } catch (err) {
+            setError('Failed to create user');
+            console.error(err);
+        }
+    };
 
-    if (error) {
-        return <p>{error}</p>;
-    }
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
+    // Hàm để tìm kiếm người dùng
+    const filteredUsers = users.filter(user => {
+        return user.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    });
 
     return (
         <div className={styles.container}>
@@ -61,17 +73,16 @@ const UserPage = ({ searchParams }: any) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {users.map((user) => (
+                    {filteredUsers.map((user) => (
                         <tr key={user.uid}>
                             <td className={styles.userName}>
-                                <div className={styles.avatvar}>
-                                    <img className={styles.avatarImage} src={ user.avatarUrl||'/user.png'} alt="" />
+                                <div className={styles.avatar}>
+                                    <img className={styles.avatarImage} src={user.photoURL || '/user.png'} alt="" />
                                 </div>
                                 {user.displayName || "user name"}
                             </td>
-                            {/* <td>{user}</td> */}
                             <td>{user.email}</td>
-                            <td>{user.createdAt || 'no time'}</td>
+                            <td>{DateUtils.convertUtcToVietnamDate(user.creationTime)}</td>
                             <td>
                                 <div className={styles.btns}>
                                     <Link href={`/dashboard/users/${user.uid}`}>
@@ -89,7 +100,6 @@ const UserPage = ({ searchParams }: any) => {
                     ))}
                 </tbody>
             </table>
-            <Pagination count={3} />
         </div>
     );
 };
